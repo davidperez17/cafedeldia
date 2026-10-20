@@ -1,0 +1,111 @@
+---
+import type { GetStaticPaths } from 'astro';
+import type { Method } from '../../../shared/rules.js';
+import BottomBar from '../../components/BottomBar.astro';
+import Header from '../../components/Header.astro';
+import InfoTile from '../../components/InfoTile.astro';
+import ProductCardH from '../../components/ProductCardH.astro';
+import ProductImage from '../../components/ProductImage.astro';
+import Base from '../../layouts/Base.astro';
+import { loadMenu } from '../../lib/sheet';
+
+export const getStaticPaths = (async () => {
+  const data = await loadMenu();
+  return data.metodos.map((m) => ({ params: { slug: m.slug }, props: { method: m } }));
+}) satisfies GetStaticPaths;
+
+interface Props { method: Method }
+
+const { method: m } = Astro.props;
+const { productos, info } = await loadMenu();
+
+const grano = m.grano ? productos.find((p) => p.slug === m.grano) : undefined;
+const total = [...m.pasos].reverse().find((s) => s.tiempo)?.tiempo ?? m.tiempo;
+const tiles = [
+  ['Ratio', m.ratio, true],
+  ['Molienda', m.molienda, false],
+  ['Agua', m.temperatura, true],
+].filter((t) => t[1]) as [string, string, boolean][];
+---
+<Base title={`${m.nombre} · ${info.nombre}`} description={m.descripcion}>
+  <link slot="head" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" />
+  <div class="detail">
+    <Header variant="back" backHref="/metodos" backLabel="Volver a métodos" title={m.tipo ? `Método · ${m.tipo}` : 'Método'} />
+
+    <div class="hero">
+      <span class="halo" aria-hidden="true" />
+      <span class="shadow" aria-hidden="true" />
+      <span class="hero-img"><ProductImage folder="metodos" file={m.imagen} alt={m.nombre} width={270} eager /></span>
+    </div>
+
+    <div class="head">
+      <h1 class="name">{m.nombre}</h1>
+      {m.descripcion && <p class="t-desc desc">{m.descripcion}</p>}
+    </div>
+
+    {tiles.length > 0 && (
+      <div class="tiles" style={`grid-template-columns:repeat(${tiles.length},minmax(0,1fr))`}>
+        {tiles.map(([label, value, big]) => <InfoTile label={label} value={value} big={big} />)}
+      </div>
+    )}
+
+    {m.pasos.length > 0 && (
+      <section aria-labelledby="lbl-steps">
+        <div class="steps-head">
+          <h2 class="t-sub" id="lbl-steps">Paso a paso</h2>
+          {total && <span class="total"><span class="ms" aria-hidden="true">timer</span>{total} min</span>}
+        </div>
+        <ol class="steps">
+          {m.pasos.map((s) => (
+            <li class="step" data-step>
+              <span class="n">{s.n}</span>
+              <span class="simg"><ProductImage folder="metodos" file={s.imagen} alt="" width={52} /></span>
+              <span class="stext"><span class="st">{s.titulo}</span>{s.descripcion && <span class="sd">{s.descripcion}</span>}</span>
+              <span class="stime">{s.tiempo}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
+    {grano && (
+      <section aria-labelledby="lbl-bean">
+        <h2 class="t-sub pad" id="lbl-bean">Granos recomendados</h2>
+        <div class="bean"><ProductCardH product={grano} /></div>
+      </section>
+    )}
+  </div>
+
+  <BottomBar slot="bottom" mapsUrl={info.mapsUrl} />
+</Base>
+
+<style>
+  .detail { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
+  .hero { height: 300px; position: relative; }
+  .halo { position: absolute; width: 250px; height: 250px; border-radius: 50%; background: var(--rosa-palo); top: 24px; left: 50%; transform: translateX(-50%); }
+  .shadow { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 150px; height: 18px; border-radius: 50%; background: radial-gradient(closest-side, rgba(43, 29, 20, .28), rgba(43, 29, 20, 0)); }
+  .hero-img { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 270px; height: 270px; display: block; }
+  .head { padding: 6px 24px 0; display: flex; flex-direction: column; gap: 6px; }
+  .name { margin: 0; font-size: 30px; font-weight: 800; line-height: 34px; letter-spacing: -.02em; }
+  .desc { margin: 0; text-wrap: pretty; }
+  .tiles { margin: 16px 24px 0; display: grid; gap: 8px; }
+  .tiles :global(.tile:not(.big) .val) { font-size: 13px; font-weight: 700; line-height: 18px; }
+
+  .steps-head { padding: 24px 24px 4px; display: flex; justify-content: space-between; align-items: baseline; }
+  .steps-head h2 { margin: 0; }
+  .total { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--gris-calido); }
+  .total .ms { font-size: 14px; }
+  .steps { list-style: none; margin: 0; padding: 0 24px; }
+  .step { display: grid; grid-template-columns: 28px 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--linea); }
+  .step:last-child { border-bottom: 0; }
+  .n { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--terracota); color: var(--terracota-oscuro); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .simg { width: 52px; height: 52px; border-radius: 16px; background: var(--niebla); overflow: hidden; display: block; }
+  .simg :global(.ph) { border-radius: 16px; box-shadow: none; background: var(--niebla); }
+  .stext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .st { font-size: 14px; font-weight: 600; }
+  .sd { font-size: 12px; line-height: 16px; color: var(--gris-calido); }
+  .stime { font-family: var(--mono); font-size: 11px; color: var(--gris-calido); }
+
+  .pad { display: block; padding: 24px 24px 0; margin: 0; }
+  .bean { padding: 30px 24px 0 48px; }
+</style>

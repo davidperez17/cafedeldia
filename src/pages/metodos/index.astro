@@ -1,0 +1,25 @@
+---
+import Header from '../../components/Header.astro';
+import MethodCard from '../../components/MethodCard.astro';
+import Base from '../../layouts/Base.astro';
+import { loadMenu } from '../../lib/sheet';
+
+const { metodos, info } = await loadMenu();
+---
+<Base title={`Métodos de preparación · ${info.nombre}`} description="Conoce los métodos de preparación de nuestro café." nav="metodos">
+  <Header variant="brand" />
+  <div class="intro">
+    <h1 class="t-title">Métodos de preparación</h1>
+    <p class="sub">Elige cómo quieres tu café</p>
+  </div>
+  <div class="grid">
+    {metodos.map((m) => <MethodCard method={m} />)}
+  </div>
+</Base>
+
+<style>
+  .intro { padding: 8px 24px 0; display: flex; flex-direction: column; gap: 4px; }
+  .intro h1 { margin: 0; }
+  .sub { margin: 0; font-size: 13px; color: var(--gris-calido); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 8px 24px 0; }
+</style>

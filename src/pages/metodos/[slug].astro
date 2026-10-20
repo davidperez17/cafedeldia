@@ -7,6 +7,7 @@ import InfoTile from '../../components/InfoTile.astro';
 import ProductCardH from '../../components/ProductCardH.astro';
 import ProductImage from '../../components/ProductImage.astro';
 import Base from '../../layouts/Base.astro';
+import { methodTotal } from '../../lib/method';
 import { loadMenu } from '../../lib/sheet';
 
 export const getStaticPaths = (async () => {
@@ -20,7 +21,7 @@ const { method: m } = Astro.props;
 const { productos, info } = await loadMenu();
 
 const grano = m.grano ? productos.find((p) => p.slug === m.grano) : undefined;
-const total = [...m.pasos].reverse().find((s) => s.tiempo)?.tiempo ?? m.tiempo;
+const total = methodTotal(m);
 const tiles = [
   ['Ratio', m.ratio, true],
   ['Molienda', m.molienda, false],
@@ -53,7 +54,7 @@ const tiles = [
       <section aria-labelledby="lbl-steps">
         <div class="steps-head">
           <h2 class="t-sub" id="lbl-steps">Paso a paso</h2>
-          {total && <span class="total"><span class="ms" aria-hidden="true">timer</span>{total} min</span>}
+          {total && <span class="total"><span class="ms" aria-hidden="true">timer</span>{total}</span>}
         </div>
         <ol class="steps">
           {m.pasos.map((s) => (

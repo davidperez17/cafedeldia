@@ -7,16 +7,17 @@ Fase actual: **prueba interna** en Vercel Hobby (gratis), subdominio `*.vercel.a
 ## 1. Crear la Google Sheet
 
 1. Crea una hoja nueva con 8 pestañas: `productos`, `categorias`, `leches`, `metodos`, `pasos`, `info`, `horario`, `excepciones`.
-2. Para empezar con datos de ejemplo, en cada pestaña usa **Archivo → Importar → Subir** con `fixtures/pub_<pestaña>.csv` y elige "Reemplazar la hoja actual". Los encabezados deben quedar exactamente como en esos archivos.
+2. Para empezar con datos de ejemplo, en cada pestaña usa **Archivo → Importar → Subir** con `fixtures/pub_<pestaña>.csv`, elige "Reemplazar la hoja actual" y **desmarca "Convertir texto en números, fechas y fórmulas"** (si no, `1:15` se vuelve hora y `+502 5555-1234` se vuelve fórmula). Los encabezados deben quedar exactamente como en esos archivos.
 3. **Compartir → Cualquier persona con el enlace → Lector.** El sitio lee la hoja sin credenciales; son precios públicos.
 4. Copia el **ID** de la hoja. Es la parte de la URL entre `/d/` y `/edit`.
 
 ## 2. Instalar el botón "Publicar"
 
 1. En la hoja: **Extensiones → Apps Script**.
-2. Reemplaza el contenido de `Código.gs` por el de `apps-script/dist/Code.gs`. Para regenerarlo: `npm run build:apps-script`.
+2. Reemplaza el contenido de `Código.gs` por el de `apps-script/dist/Code.gs` (está en el repo; si cambias `shared/rules.js` o `apps-script/src/main.js`, regenéralo con `npm run build:apps-script` y vuelve a pegarlo).
 3. **Configuración del proyecto** (engranaje) → activa "Mostrar el archivo de manifiesto appsscript.json" y pega `apps-script/appsscript.json`.
 4. Guarda. Recarga la hoja: aparece el menú **Café del Día**. La primera vez Google pide autorización.
+5. Corre una vez **Café del Día → Preparar columnas de texto**. Pone en formato texto las columnas de horas, ratios, tiempos y la columna `valor` de `info`, para que Sheets no convierta lo que se escribe.
 
 ## 3. Proyecto en Vercel
 
@@ -53,6 +54,7 @@ npm run test:e2e     # navegador (usa el puerto 4322)
 ## Prueba de aceptación (manual, con la hoja real)
 
 - [ ] Publicar desde la hoja → el cambio aparece en `*.vercel.app` en menos de 3 minutos.
-- [ ] Escribir `Q34` en un precio → "Revisar" marca la celda en rojo y "Publicar" no publica.
+- [ ] Escribir `'Q34` (con apóstrofo, para que quede como texto) en un precio → "Revisar" marca la celda en rojo y "Publicar" no publica. Sin apóstrofo, con la hoja en configuración regional de Guatemala, Sheets puede guardarlo como el número 34 con formato de moneda: eso se acepta y es correcto.
+- [ ] En `metodos`, el ratio `1:15` y en `pasos` el tiempo `0:30` se ven igual en el sitio; `24:00` en `horario` se acepta.
 - [ ] Corregir y publicar → la celda vuelve a la normalidad y el sitio se actualiza.
 - [ ] Hacer un commit sin pasar por la hoja → el sitio sigue mostrando el último menú publicado.

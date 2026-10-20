@@ -20,6 +20,8 @@ Si algo está mal, la celda se pinta de **rojo** y, al pasar el mouse, dice qué
 - **Fechas**: `2026-12-25` (año-mes-día).
 - **Ocultar sin borrar**: pon `no` en la columna `visible`.
 - **Agotado hoy**: escribe `agotado` en la columna `badge`. El producto se sigue viendo, pero dice "Hoy no disponible".
+- **Teléfonos y WhatsApp**: si al escribir `+502 5555-1234` la celda muestra `#ERROR!`, escríbelo empezando con un apóstrofo: `'+502 5555-1234`. Deben tener al menos 8 dígitos.
+- **Si una hora o un ratio cambia solo** (por ejemplo, `1:15` aparece como `1:15:00`): usa una vez **Café del Día → Preparar columnas de texto**.
 - **No toques** las pestañas que empiezan con `pub_`: son la copia publicada y están ocultas.
 
 ## Qué va en cada pestaña

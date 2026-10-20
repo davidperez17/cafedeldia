@@ -9,7 +9,7 @@ let api: Record<string, any> = {};
 const Utilities = {
   formatDate(d: Date, _tz: string, fmt: string) {
     const p = (n: number) => String(n).padStart(2, '0');
-    if (fmt === 'HH:mm') return `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+    if (fmt !== 'yyyy-MM-dd') throw new Error(`unexpected format ${fmt}`);
     return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
   },
 };
@@ -41,24 +41,32 @@ describe('apps script bundle', () => {
     expect(src).toMatch(/function onOpen\(/);
     expect(src).toMatch(/function publish\(/);
     expect(src).toMatch(/function review\(/);
+    expect(src).toMatch(/function prepareSheet\(/);
   });
 
   it('snapshotValue_ writes raw values as plain text', () => {
-    expect(api.snapshotValue_(34, 'UTC')).toBe('34');
-    expect(api.snapshotValue_(34.5, 'UTC')).toBe('34.5');
-    expect(api.snapshotValue_(true, 'UTC')).toBe('sí');
-    expect(api.snapshotValue_(false, 'UTC')).toBe('no');
-    expect(api.snapshotValue_('', 'UTC')).toBe('');
-    expect(api.snapshotValue_(new Date('2026-12-25T12:00:00Z'), 'UTC')).toBe('2026-12-25');
+    expect(api.snapshotValue_(34, 'Q34.00', 'UTC')).toBe('34');
+    expect(api.snapshotValue_(34.5, '34,5', 'UTC')).toBe('34.5');
+    expect(api.snapshotValue_(true, 'TRUE', 'UTC')).toBe('sí');
+    expect(api.snapshotValue_(false, 'FALSE', 'UTC')).toBe('no');
+    expect(api.snapshotValue_('', '', 'UTC')).toBe('');
+    expect(api.snapshotValue_(new Date('2026-12-25T12:00:00Z'), '25/12/2026', 'UTC')).toBe('2026-12-25');
   });
 
-  it('snapshotValue_ turns time-only cells (Sheets epoch 1899) into HH:mm', () => {
-    expect(api.snapshotValue_(new Date('1899-12-30T07:00:00Z'), 'UTC')).toBe('07:00');
+  it('time-only cells (Sheets epoch 1899) use what the owner sees, not the raw date', () => {
+    const t = (iso: string) => new Date(iso);
+    expect(api.snapshotValue_(t('1899-12-30T07:00:00Z'), '7:00', 'UTC')).toBe('7:00');
+    expect(api.snapshotValue_(t('1899-12-30T07:00:00Z'), '7:00:00', 'UTC')).toBe('7:00');
+    expect(api.snapshotValue_(t('1899-12-30T01:15:00Z'), '1:15', 'UTC')).toBe('1:15'); // ratio 1:15
+    expect(api.snapshotValue_(t('1899-12-30T00:30:00Z'), '0:30', 'UTC')).toBe('0:30'); // tiempo de paso
+    expect(api.snapshotValue_(t('1899-12-31T00:00:00Z'), '24:00:00', 'UTC')).toBe('24:00'); // cierre a medianoche
+    expect(api.snapshotValue_(t('1899-12-30T07:00:00Z'), '7:00 a. m.', 'UTC')).toBe('7:00');
+    expect(api.snapshotValue_(t('1899-12-30T19:30:00Z'), '7:30 p. m.', 'UTC')).toBe('19:30');
   });
 
   it('a currency-formatted number is accepted but typed "Q34" text is not', () => {
     const header = ['slug', 'nombre', 'categoria', 'precio'];
-    const toRows = (vals: unknown[][]) => api.rowsFromValues_(vals, 'UTC').rows;
+    const toRows = (vals: unknown[][]) => api.rowsFromValues_(vals, vals.map((r) => r.map(String)), 'UTC').rows;
     const ok = api.validateWorkbook({
       ...emptyTabs(),
       productos: toRows([header, ['capuchino', 'Capuchino', 'c', 34]]),

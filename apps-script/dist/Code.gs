@@ -16,6 +16,8 @@ const REQUIRED_COLUMNS = {
 };
 
 const BADGES = ['especialidad', 'nuevo', 'agotado'];
+const FORMULA_ERROR = /^#(ERROR!|REF!|N\/A|VALUE!|NAME\?|DIV\/0!|NUM!|NULL!)/;
+const PHONE_KEYS = ['whatsapp', 'telefono'];
 const DAYS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 const INFO_KEYS = {
   nombre: 'nombre', eslogan: 'eslogan', subtitulo: 'subtitulo', direccion: 'direccion',
@@ -111,6 +113,17 @@ function validateWorkbook(tabs) {
     for (const k of Object.keys(r)) o[k.trim().toLowerCase()] = r[k];
     return o;
   });
+
+  // Sheets convierte textos como "+502 5555-1234" en fórmulas rotas.
+  for (const tab of Object.keys(REQUIRED_COLUMNS)) {
+    rowsOf(tab).forEach((r, i) => {
+      for (const col of Object.keys(r)) {
+        if (FORMULA_ERROR.test(cell(r, col))) {
+          err(tab, i, col, 'La celda tiene un error de fórmula; escríbela empezando con un apóstrofo (\')');
+        }
+      }
+    });
+  }
 
   const checkSlug = (tab, i, slug, seen) => {
     if (!slug) { err(tab, i, 'slug', 'Falta el slug'); return false; }
@@ -287,10 +300,16 @@ function validateWorkbook(tabs) {
 
   // info
   const info = { nombre: '', eslogan: '', subtitulo: '' };
-  rowsOf('info').forEach((r) => {
-    const key = INFO_KEYS[cell(r, 'clave').toLowerCase()];
+  rowsOf('info').forEach((r, i) => {
+    const clave = cell(r, 'clave').toLowerCase();
+    const key = INFO_KEYS[clave];
     const valor = cell(r, 'valor');
-    if (key && valor) info[key] = valor;
+    if (!key || !valor || FORMULA_ERROR.test(valor)) return;
+    if (PHONE_KEYS.includes(clave) && valor.replace(/\D/g, '').length < 8) {
+      err('info', i, 'valor', 'El número debe tener al menos 8 dígitos');
+      return;
+    }
+    info[key] = valor;
   });
   if (!info.nombre) {
     fatal.push({ tab: 'info', row: 1, column: 'nombre', message: 'En la pestaña info falta la clave nombre' });
@@ -348,23 +367,43 @@ function onOpen() {
     .createMenu(MENU_TITLE)
     .addItem('Revisar sin publicar', 'review')
     .addItem('Publicar menú', 'publish')
+    .addSeparator()
+    .addItem('Preparar columnas de texto', 'prepareSheet')
     .addToUi();
 }
 
-/** Valor crudo de una celda → texto plano, sin formato de moneda ni de fecha. */
-function snapshotValue_(v, tz) {
+/** Hora tal como la ve el dueño ("7:00:00", "7:30 p. m.", "24:00:00") → "H:MM". */
+function displayTime_(display) {
+  var m = /^(\d{1,2}):(\d{2})(?::\d{2})?\s*(?:([ap])\.?\s*m\.?)?$/i.exec(String(display).trim());
+  if (!m) return String(display).trim();
+  var h = Number(m[1]);
+  var ampm = m[3] ? m[3].toLowerCase() : '';
+  if (ampm === 'p' && h < 12) h += 12;
+  if (ampm === 'a' && h === 12) h = 0;
+  return h + ':' + m[2];
+}
+
+/**
+ * Valor de una celda → texto plano, sin formato de moneda ni de fecha.
+ * v: getValues(); display: getDisplayValues() (lo que ve el dueño).
+ */
+function snapshotValue_(v, display, tz) {
   if (v === null || v === undefined || v === '') return '';
   if (v instanceof Date) {
-    // Las horas sin fecha en Sheets son fechas del 30/12/1899.
-    return Utilities.formatDate(v, tz, v.getUTCFullYear() <= 1900 ? 'HH:mm' : 'yyyy-MM-dd');
+    // Sheets guarda "07:00", "1:15" (ratio) o "24:00" como fechas de 1899. El valor crudo
+    // puede venir corrido por el huso horario histórico, así que se usa lo que se ve.
+    if (v.getUTCFullYear() <= 1900) return displayTime_(display);
+    return Utilities.formatDate(v, tz, 'yyyy-MM-dd');
   }
   if (typeof v === 'boolean') return v ? 'sí' : 'no';
   return String(v).trim();
 }
 
-/** Matriz de getValues() → encabezados normalizados, filas como objetos y la matriz en texto. */
-function rowsFromValues_(values, tz) {
-  var text = values.map(function (row) { return row.map(function (v) { return snapshotValue_(v, tz); }); });
+/** getValues() + getDisplayValues() → encabezados normalizados, filas como objetos y la matriz en texto. */
+function rowsFromValues_(values, displays, tz) {
+  var text = values.map(function (row, r) {
+    return row.map(function (v, c) { return snapshotValue_(v, displays[r][c], tz); });
+  });
   var headers = (text[0] || []).map(function (h) { return h.toLowerCase(); });
   var rows = text.slice(1).map(function (row) {
     var o = {};
@@ -386,7 +425,8 @@ function readWorkbook_(ss) {
   Object.keys(REQUIRED_COLUMNS).forEach(function (name) {
     var sheet = ss.getSheetByName(name);
     if (!sheet) return;
-    var parsed = rowsFromValues_(sheet.getDataRange().getValues(), tz);
+    var range = sheet.getDataRange();
+    var parsed = rowsFromValues_(range.getValues(), range.getDisplayValues(), tz);
     tabs[name] = parsed.rows;
     sheets[name] = { sheet: sheet, headers: parsed.headers, text: parsed.text };
   });
@@ -460,6 +500,35 @@ function snapshot_(ss, sheets) {
     }
     pub.hideSheet();
   });
+}
+
+// Columnas donde Sheets suele convertir lo escrito (horas, ratios, teléfonos).
+var TEXT_COLUMNS_ = {
+  metodos: ['ratio', 'tiempo', 'temperatura'],
+  pasos: ['tiempo'],
+  horario: ['abre', 'cierra'],
+  excepciones: ['fecha', 'abre', 'cierra'],
+  info: ['valor'],
+};
+
+/** Pone esas columnas en formato de texto, conservando lo que se ve hoy. */
+function prepareSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var wb = readWorkbook_(ss);
+  Object.keys(TEXT_COLUMNS_).forEach(function (name) {
+    var info = wb.sheets[name];
+    if (!info) return;
+    var rows = Math.max(info.sheet.getMaxRows() - 1, 1);
+    TEXT_COLUMNS_[name].forEach(function (col) {
+      var c = info.headers.indexOf(col) + 1;
+      if (!c) return;
+      var range = info.sheet.getRange(2, c, rows, 1);
+      var current = info.text.slice(1).map(function (row) { return [row[c - 1] || '']; });
+      range.setNumberFormat('@');
+      if (current.length) info.sheet.getRange(2, c, current.length, 1).setValues(current);
+    });
+  });
+  ss.toast('Listo: horas, ratios y teléfonos ahora se guardan tal como los escribes', MENU_TITLE, 8);
 }
 
 function publish() {

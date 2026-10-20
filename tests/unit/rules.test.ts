@@ -223,4 +223,23 @@ describe('validateWorkbook', () => {
     const r = validateWorkbook(tabs);
     expect(r.errors[0]).toMatchObject({ column: 'badge' });
   });
+
+  it('flags spreadsheet formula errors in any cell', () => {
+    const tabs = baseTabs();
+    tabs.productos[0].nota = '#ERROR!';
+    const r = validateWorkbook(tabs);
+    expect(r.errors[0]).toMatchObject({ tab: 'productos', row: 2, column: 'nota' });
+    expect(r.errors[0].message).toContain('error de fórmula');
+  });
+
+  it('requires at least 8 digits in whatsapp and telefono', () => {
+    const tabs = baseTabs();
+    tabs.info.push({ clave: 'whatsapp', valor: '5555' });
+    tabs.info.push({ clave: 'telefono', valor: '+502 5555-1234' });
+    const r = validateWorkbook(tabs);
+    expect(r.errors).toEqual([{
+      tab: 'info', row: 5, column: 'valor', message: 'El número debe tener al menos 8 dígitos',
+    }]);
+  });
 });
+

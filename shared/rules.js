@@ -15,6 +15,8 @@ export const REQUIRED_COLUMNS = {
 };
 
 const BADGES = ['especialidad', 'nuevo', 'agotado'];
+const FORMULA_ERROR = /^#(ERROR!|REF!|N\/A|VALUE!|NAME\?|DIV\/0!|NUM!|NULL!)/;
+const PHONE_KEYS = ['whatsapp', 'telefono'];
 const DAYS = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 const INFO_KEYS = {
   nombre: 'nombre', eslogan: 'eslogan', subtitulo: 'subtitulo', direccion: 'direccion',
@@ -110,6 +112,17 @@ export function validateWorkbook(tabs) {
     for (const k of Object.keys(r)) o[k.trim().toLowerCase()] = r[k];
     return o;
   });
+
+  // Sheets convierte textos como "+502 5555-1234" en fórmulas rotas.
+  for (const tab of Object.keys(REQUIRED_COLUMNS)) {
+    rowsOf(tab).forEach((r, i) => {
+      for (const col of Object.keys(r)) {
+        if (FORMULA_ERROR.test(cell(r, col))) {
+          err(tab, i, col, 'La celda tiene un error de fórmula; escríbela empezando con un apóstrofo (\')');
+        }
+      }
+    });
+  }
 
   const checkSlug = (tab, i, slug, seen) => {
     if (!slug) { err(tab, i, 'slug', 'Falta el slug'); return false; }
@@ -286,10 +299,16 @@ export function validateWorkbook(tabs) {
 
   // info
   const info = { nombre: '', eslogan: '', subtitulo: '' };
-  rowsOf('info').forEach((r) => {
-    const key = INFO_KEYS[cell(r, 'clave').toLowerCase()];
+  rowsOf('info').forEach((r, i) => {
+    const clave = cell(r, 'clave').toLowerCase();
+    const key = INFO_KEYS[clave];
     const valor = cell(r, 'valor');
-    if (key && valor) info[key] = valor;
+    if (!key || !valor || FORMULA_ERROR.test(valor)) return;
+    if (PHONE_KEYS.includes(clave) && valor.replace(/\D/g, '').length < 8) {
+      err('info', i, 'valor', 'El número debe tener al menos 8 dígitos');
+      return;
+    }
+    info[key] = valor;
   });
   if (!info.nombre) {
     fatal.push({ tab: 'info', row: 1, column: 'nombre', message: 'En la pestaña info falta la clave nombre' });

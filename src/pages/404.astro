@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Página no encontrada · Café del Día">
+  <div class="nf">
+    <span class="cup" aria-hidden="true"><span class="ms">local_cafe</span></span>
+    <h1 class="t-title">Esta página no está en el menú</h1>
+    <p class="t-desc">Puede que el enlace haya cambiado o que el producto ya no esté disponible.</p>
+    <a href="/" class="cta">Ver el menú<span class="ic" aria-hidden="true"><span class="ms">arrow_forward</span></span></a>
+  </div>
+</Base>
+
+<style>
+  .nf { min-height: 100dvh; padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+  .nf h1, .nf p { margin: 0; }
+  .cup { width: 96px; height: 96px; border-radius: 50%; background: var(--rosa-palo); color: var(--terracota-oscuro); display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .cup .ms { font-size: 44px; }
+  .cta {
+    margin-top: 16px; height: 56px; padding: 0 9px 0 24px; border-radius: 999px; background: var(--espresso); color: #fff;
+    font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ic { width: 38px; height: 38px; border-radius: 50%; background: var(--terracota); display: flex; align-items: center; justify-content: center; }
+  .ic .ms { font-size: 20px; }
+</style>

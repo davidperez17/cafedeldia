@@ -1,6 +1,9 @@
 ---
 import '../styles/global.css';
 import BottomNav from '../components/BottomNav.astro';
+import { resolveImage } from '../lib/images';
+import { cafeJsonLd } from '../lib/seo';
+import { loadMenu } from '../lib/sheet';
 
 interface Props {
   title: string;
@@ -10,6 +13,13 @@ interface Props {
 }
 
 const { title, description = 'Menú digital de Café del Día.', nav = null, ogImage } = Astro.props;
+
+const { info, horario, excepciones } = await loadMenu();
+const site = Astro.site ?? new URL('https://cafedeldia.vercel.app');
+const canonical = new URL(Astro.url.pathname, site).href;
+const portada = resolveImage('portada', info.imagenPortada);
+const og = ogImage ?? (portada ? new URL(portada.src, site).href : undefined);
+const jsonLd = JSON.stringify(cafeJsonLd(info, horario, excepciones, site.href));
 
 // Material Symbols: solo los íconos usados, en orden alfabético (requisito de Google Fonts).
 const ICONS = [
@@ -26,7 +36,15 @@ const iconsHref = `https://fonts.googleapis.com/css2?family=Material+Symbols+Rou
     <meta name="theme-color" content="#FAF7F2" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_GT" />
+    <meta property="og:site_name" content={info.nombre} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {og && <meta property="og:image" content={og} />}
+    <script type="application/ld+json" set:html={jsonLd} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" />

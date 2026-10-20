@@ -1,0 +1,35 @@
+---
+import type { Info } from '../../shared/rules.js';
+import { instagramUrl, telUrl, whatsappUrl } from '../lib/seo';
+
+interface Props { info: Info }
+
+const { info } = Astro.props;
+const links = [
+  info.whatsapp && { href: whatsappUrl(info.whatsapp), icon: 'chat', label: 'WhatsApp', external: true },
+  info.instagram && { href: instagramUrl(info.instagram), icon: 'photo_camera', label: 'Instagram', external: true },
+  info.telefono && { href: telUrl(info.telefono), icon: 'call', label: 'Llamar', external: false },
+].filter(Boolean) as { href: string; icon: string; label: string; external: boolean }[];
+---
+{links.length > 0 && (
+  <div class="links">
+    {links.map((l) => (
+      <a href={l.href} class="link" target={l.external ? '_blank' : undefined} rel={l.external ? 'noopener' : undefined}>
+        <span class="ic" aria-hidden="true"><span class="ms">{l.icon}</span></span>
+        <span>{l.label}</span>
+      </a>
+    ))}
+  </div>
+)}
+
+<style>
+  .links { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+  .link {
+    background: var(--niebla); border-radius: 18px; padding: 12px; min-height: 88px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 10px;
+    font-size: 13px; font-weight: 600; transition: transform .15s;
+  }
+  .link:active { transform: scale(.97); }
+  .ic { width: 36px; height: 36px; border-radius: 50%; background: var(--crema); color: var(--terracota-oscuro); display: flex; align-items: center; justify-content: center; }
+  .ic .ms { font-size: 20px; }
+</style>

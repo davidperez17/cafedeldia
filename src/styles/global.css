@@ -54,6 +54,10 @@ button, input { font: inherit; color: inherit; }
   font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   user-select: none;
+  /* Reserva el tamaño del ícono mientras carga la fuente (sin esto el texto de la ligadura desborda). */
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
 }
 
 .sr-only {

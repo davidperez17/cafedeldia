@@ -1,0 +1,8 @@
+slug,nombre,tiempo,cuerpo,acidez,tipo,descripcion,ratio,molienda,temperatura,grano,imagen,orden,visible
+espresso,Espresso,30 s,5,2,Presión,Extracción corta a alta presión. Cuerpo denso y crema persistente.,1:2,Fina,93°C,,espresso.png,1,sí
+v60,V60,3 min,2,4,Filtrado,"Cono de vertido manual con espiral interna. Taza limpia, cuerpo ligero y acidez brillante que resalta las notas florales del grano.",1:15,Media-fina,92°C,huehuetenango-lote-7,v60.png,2,sí
+chemex,Chemex,4 min,2,4,Filtrado,Filtro grueso que da una taza muy limpia y dulce. Ideal para compartir.,1:16,Media-gruesa,93°C,,chemex.png,3,sí
+prensa,Prensa francesa,4 min,5,2,Inmersión,Inmersión completa y filtro metálico. Cuerpo pesado y textura aceitosa.,1:12,Gruesa,94°C,,prensa.png,4,sí
+aeropress,AeroPress,2 min,3,3,Presión,Inmersión con presión manual. Versátil y rápida.,1:14,Media,85°C,,aeropress.png,5,sí
+coldbrew,Cold Brew,18 h,4,1,Inmersión en frío,Infusión en agua fría durante 18 horas. Dulce y sin amargor.,1:8,Gruesa,Fría,,coldbrew.png,6,sí
+sifon,Sifón,5 min,3,4,Vacío,Cafetera de vacío de dos cámaras. Taza aromática y espectacular de ver.,1:15,Media,92°C,,sifon.png,7,sí

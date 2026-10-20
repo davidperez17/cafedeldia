@@ -1,0 +1,7 @@
+metodo,n,titulo,descripcion,tiempo,imagen
+v60,1,Pesar,20 g de café y 300 g de agua,0:00,bascula.png
+v60,2,Moler,"Media-fina, como sal de mesa",,molino.png
+v60,3,Enjuagar filtro,Agua caliente; desecha el agua,,filtro.png
+v60,4,Bloom,"40 g de agua, espera 30 s",0:30,bloom.png
+v60,5,Verter,Espirales lentas hasta 300 g,2:30,tetera.png
+v60,6,Servir,Retira el cono y disfruta,3:00,taza.png

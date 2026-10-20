@@ -1,0 +1,14 @@
+slug,nombre,categoria,nota,descripcion,precio,precio_s,precio_l,leche,badge,destacado,recomendado,origen,tueste,notas,acompanar,imagen,orden,visible
+capuchino,Capuchino,cafe-caliente,"Espuma densa, doble shot",Espresso doble de Huehuetenango con leche texturizada y un toque de canela. Notas a chocolate y caramelo.,24,,,,,,sí,Huehuetenango,Medio,"Chocolate, caramelo",croissant,capuchino.png,1,sí
+caramel-latte,Caramel Latte,cafe-caliente,Caramelo salado de la casa,"Espresso doble, leche vaporizada y caramelo salado hecho en casa que cae por las paredes del vaso. ""Dulce"", sedoso
+y con final tostado.",34,30,40,sí,especialidad,sí,,Huehuetenango,Medio,"Caramelo, nuez","croissant, pan-banano",caramel-latte.png,2,sí
+latte-cardamomo,Latte de Cardamomo,cafe-caliente,Especiado y floral,Espresso con leche vaporizada infusionada con cardamomo verde. Aromático y suave.,34,30,40,sí,especialidad,sí,,Cobán,Medio,"Cardamomo, flores",,latte-cardamomo.png,3,sí
+affogato,Affogato,cafe-frio,Helado de vainilla + espresso,Una bola de helado artesanal de vainilla bañada con un espresso recién extraído.,30,,,,especialidad,sí,,,,,,affogato.png,4,sí
+cold-brew,Cold Brew,cafe-frio,Infusión en frío 18 h,"Café de Acatenango infusionado en frío por 18 horas. Servido sobre hielo, sin amargor.",26,,32,,nuevo,,sí,Acatenango,Medio,"Cacao, panela",,cold-brew.png,5,sí
+flat-white,Flat White,cafe-caliente,"Microespuma, más café",Doble ristretto con una capa fina de microespuma. Más intenso que un latte.,27,,,sí,,,sí,,,,,flat-white.png,6,sí
+mocha,Mocha,cafe-caliente,Cacao de Cobán,"Espresso, cacao guatemalteco de Cobán y leche. Dulce, intenso y reconfortante.",30,26,36,sí,,,sí,,,,,mocha.png,7,sí
+chemex-del-dia,Chemex del día,cafe-caliente,Origen del día,Método filtrado para resaltar la acidez brillante del origen del día. Para compartir.,35,,,,agotado,,,,,,,chemex.png,8,sí
+croissant,Croissant de mantequilla,reposteria,"Mantequilla, horneado hoy",Hojaldre de mantequilla horneado cada mañana en casa.,18,,,,,,,,,,,croissant.png,1,sí
+pan-banano,Pan de banano,reposteria,Receta de la abuela,Pan húmedo de banano maduro con nueces.,16,,,,,,,,,,,pan-banano.png,2,sí
+te-chai,Chai latte,te,Especias y leche,Té negro con especias y leche vaporizada.,25,,,sí,,,,,,,,chai.png,1,sí
+huehuetenango-lote-7,Huehuetenango · Lote 7,granos,"Lavado · jazmín, durazno, panela",Bolsa de 340 g de café de especialidad tostado en casa.,95,,,,,,,Huehuetenango,Claro,"Jazmín, durazno, panela",,bolsa-lote-7.png,1,sí

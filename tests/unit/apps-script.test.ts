@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 let src = '';
@@ -22,6 +22,14 @@ beforeAll(() => {
     module, {}, {}, {}, Utilities,
   );
   api = module.exports;
+});
+
+describe('apps script build', () => {
+  it('creates apps-script/dist when it does not exist (fresh clone)', () => {
+    rmSync('apps-script/dist', { recursive: true, force: true });
+    execFileSync('node', ['apps-script/build.mjs']);
+    expect(existsSync('apps-script/dist/Code.gs')).toBe(true);
+  });
 });
 
 describe('apps script bundle', () => {

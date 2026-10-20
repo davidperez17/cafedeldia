@@ -21,7 +21,7 @@ const { label, value, icon, big = false } = Astro.props;
   .tile { background: var(--niebla); border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
   .ico { width: 32px; height: 32px; border-radius: 50%; background: var(--crema); overflow: hidden; display: block; }
   .lbl { font-size: 10px; color: var(--gris-calido); }
-  .val { font-size: 12px; font-weight: 600; line-height: 15px; overflow-wrap: anywhere; }
+  .val { font-size: 11px; font-weight: 600; line-height: 15px; letter-spacing: -.01em; hyphens: auto; overflow-wrap: break-word; }
   .big { padding: 12px; gap: 2px; }
   .big .val { font-size: 18px; font-weight: 800; line-height: 22px; letter-spacing: -.02em; }
 </style>

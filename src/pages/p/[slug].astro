@@ -1,0 +1,149 @@
+---
+import type { GetStaticPaths } from 'astro';
+import type { Product } from '../../../shared/rules.js';
+import BottomBar from '../../components/BottomBar.astro';
+import Chip from '../../components/Chip.astro';
+import Header from '../../components/Header.astro';
+import InfoTile from '../../components/InfoTile.astro';
+import ProductCardV from '../../components/ProductCardV.astro';
+import ProductImage from '../../components/ProductImage.astro';
+import BadgeTag from '../../components/Badge.astro';
+import Base from '../../layouts/Base.astro';
+import { formatQ, HERO_PX, priceFor, SHADOW_PX, SIZE_OZ, sizesOf, type Size } from '../../lib/price';
+import { loadMenu } from '../../lib/sheet';
+
+export const getStaticPaths = (async () => {
+  const data = await loadMenu();
+  return data.productos.map((p) => ({ params: { slug: p.slug }, props: { product: p } }));
+}) satisfies GetStaticPaths;
+
+interface Props { product: Product }
+
+const { product: p } = Astro.props;
+const { productos, leches, info } = await loadMenu();
+
+const sizes = sizesOf(p);
+const size: Size = 'M';
+const milks = p.leche ? leches : [];
+const milk = milks[0];
+const price = formatQ(priceFor(p, size, milk?.extra ?? 0));
+const summaryParts = [sizes.length ? size : '', milk?.nombre ?? ''].filter(Boolean);
+const summary = summaryParts.length ? summaryParts.join(' · ') : undefined;
+const heroPx = sizes.length ? HERO_PX[size] : HERO_PX.M;
+const prices = Object.fromEntries((['S', 'M', 'L'] as Size[]).map((s) => [s, priceFor(p, s)]));
+const pairings = p.acompanar.map((s) => productos.find((x) => x.slug === s)).filter((x): x is Product => !!x);
+const sheet = [
+  ['Origen', p.origen],
+  ['Tueste', p.tueste],
+  ['Notas', p.notas],
+].filter((e): e is [string, string] => !!e[1]);
+const out = p.badge === 'agotado';
+---
+<Base title={`${p.nombre} · ${info.nombre}`} description={p.nota || p.descripcion}>
+  <div class="detail" data-detail data-prices={JSON.stringify(prices)}>
+    <Header variant="back" backHref="/" priceLabel={price} />
+
+    <div class="hero">
+      <span class="halo" aria-hidden="true" />
+      <span class="shadow" aria-hidden="true" data-hero-shadow style={`width:${sizes.length ? SHADOW_PX[size] : SHADOW_PX.M}px`} />
+      <span class="hero-img" data-hero data-hero-sizes={JSON.stringify(HERO_PX)} data-shadow-sizes={JSON.stringify(SHADOW_PX)} style={`width:${heroPx}px;height:${heroPx}px`}>
+        <ProductImage folder="productos" file={p.imagen} alt={p.nombre} width={280} eager />
+      </span>
+    </div>
+
+    <div class="head">
+      {p.badge && <BadgeTag kind={p.badge} />}
+      <h1 class="t-title name">{p.nombre}</h1>
+      {out && <p class="unavailable">Hoy no disponible</p>}
+      {p.descripcion && <p class="t-desc desc">{p.descripcion}</p>}
+    </div>
+
+    {sheet.length > 0 && (
+      <div class="sheet" style={`grid-template-columns:repeat(${sheet.length},minmax(0,1fr))`}>
+        {sheet.map(([label, value]) => <InfoTile label={label} value={value} />)}
+      </div>
+    )}
+
+    {sizes.length > 0 && (
+      <div class="opt-row">
+        <div class="opt-head">
+          <span class="t-sub" id="lbl-size">Tamaño</span>
+          <span class="oz" data-oz>{SIZE_OZ[size]}</span>
+        </div>
+        <div class="sizes" role="radiogroup" aria-labelledby="lbl-size">
+          {sizes.map((s) => (
+            <label class="size">
+              <input type="radio" name="size" value={s} checked={s === size} class="sr-only" data-oz-label={SIZE_OZ[s]} aria-label={`${s}, ${SIZE_OZ[s]}, ${formatQ(prices[s])}`} />
+              <span aria-hidden="true">{s}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {milks.length > 0 && (
+      <div class="milk">
+        <span class="t-sub pad" id="lbl-milk">Leche</span>
+        <div class="chips no-scrollbar" role="radiogroup" aria-labelledby="lbl-milk">
+          {milks.map((m, i) => (
+            <Chip as="label" label={m.nombre} icon={m.imagen ?? ''} extra={m.extra ? `+${formatQ(m.extra)}` : undefined}>
+              <input slot="input" type="radio" name="milk" value={m.nombre} checked={i === 0} class="sr-only" data-milk-extra={m.extra} />
+            </Chip>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {pairings.length > 0 && (
+      <section class="pairings" aria-labelledby="lbl-pair">
+        <h2 class="t-sub pad" id="lbl-pair">Acompáñalo con</h2>
+        <div class="pair-grid">{pairings.map((x) => <ProductCardV product={x} compact />)}</div>
+      </section>
+    )}
+  </div>
+
+  <BottomBar slot="bottom" summary={summary} price={price} mapsUrl={info.mapsUrl} />
+</Base>
+
+<script>
+  import '../../scripts/detail-price';
+</script>
+
+<style>
+  .detail { padding-bottom: calc(130px + env(safe-area-inset-bottom)); }
+  .hero { height: 300px; position: relative; margin-top: -8px; }
+  .halo { position: absolute; width: 250px; height: 250px; border-radius: 50%; background: var(--rosa-palo); top: 28px; left: 50%; transform: translateX(-50%); }
+  .shadow {
+    position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); height: 18px; border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(43, 29, 20, .28), rgba(43, 29, 20, 0));
+    transition: width .35s var(--ease);
+  }
+  .hero-img {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: block;
+    transition: width .35s var(--ease), height .35s var(--ease);
+  }
+  .head { padding: 8px 24px 0; display: flex; flex-direction: column; gap: 8px; }
+  .name { margin: 0; }
+  .unavailable { margin: 0; font-size: 13px; font-weight: 600; color: var(--terracota-oscuro); }
+  .desc { margin: 0; text-wrap: pretty; }
+  .sheet { margin: 16px 24px 0; display: grid; gap: 8px; }
+
+  .opt-row { padding: 22px 24px 0; display: flex; justify-content: space-between; align-items: center; }
+  .opt-head { display: flex; flex-direction: column; gap: 2px; }
+  .oz { font-size: 12px; color: var(--gris-calido); }
+  .sizes { display: flex; gap: 10px; }
+  .size {
+    width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--terracota); color: var(--terracota-oscuro);
+    font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background .15s, color .15s; -webkit-tap-highlight-color: transparent;
+  }
+  .size:has(input:checked) { background: var(--terracota); color: #fff; }
+  .size:has(input:focus-visible) { outline: 2px solid var(--terracota-oscuro); outline-offset: 2px; }
+
+  .pad { display: block; padding: 22px 24px 0; margin: 0; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 10px 24px 4px; }
+  .chips :global(.chip) { font-size: 13px; padding-right: 14px; }
+
+  .pairings .pad { padding-top: 24px; }
+  .pair-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 24px; }
+</style>

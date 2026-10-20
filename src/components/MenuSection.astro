@@ -1,0 +1,34 @@
+---
+import type { Product } from '../../shared/rules.js';
+import ProductCardH from './ProductCardH.astro';
+import ProductCardV from './ProductCardV.astro';
+
+interface Props {
+  title: string;
+  key: 'destacados' | 'recomendados';
+  products: Product[];
+  variant: 'v' | 'h';
+}
+
+const { title, key, products, variant } = Astro.props;
+---
+{products.length > 0 && (
+  <section class="sec" data-section={key} aria-labelledby={`t-${key}`}>
+    <h2 class="t-section head" id={`t-${key}`}>{title}</h2>
+    {variant === 'v' ? (
+      <div class="row no-scrollbar">{products.map((p) => <ProductCardV product={p} />)}</div>
+    ) : (
+      <div class="list">{products.map((p) => <ProductCardH product={p} />)}</div>
+    )}
+  </section>
+)}
+
+<style>
+  .sec { padding-top: 26px; }
+  .head { margin: 0; padding: 0 24px; }
+  .row {
+    display: flex; gap: 14px; overflow-x: auto; padding: 0 24px 8px;
+    scroll-snap-type: x mandatory; scroll-padding: 0 24px;
+  }
+  .list { display: flex; flex-direction: column; gap: 14px; padding: 30px 24px 0 48px; }
+</style>

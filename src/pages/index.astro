@@ -1,6 +1,138 @@
 ---
+import { Image } from 'astro:assets';
+import Chip from '../components/Chip.astro';
+import Header from '../components/Header.astro';
+import MenuSection from '../components/MenuSection.astro';
+import ProductCardH from '../components/ProductCardH.astro';
 import Base from '../layouts/Base.astro';
+import { resolveImage } from '../lib/images';
+import { loadMenu } from '../lib/sheet';
+
+const data = await loadMenu();
+const { info, productos, categorias, horario, excepciones } = data;
+
+const portada = resolveImage('portada', info.imagenPortada);
+const groups = categorias
+  .map((c) => ({ ...c, items: productos.filter((p) => p.categoria === c.slug) }))
+  .filter((g) => g.items.length > 0);
+const hours = JSON.stringify({ horario, excepciones });
 ---
-<Base title="Café del Día · Menú">
-  <h1 class="t-xl" style="padding:24px">Café del Día</h1>
+<Base title={`${info.nombre} · Menú`} description={`${info.eslogan}. ${info.subtitulo}.`} nav="menu">
+  <section class="hero" aria-labelledby="hero-title">
+    {portada && (
+      <Image src={portada} alt="" widths={[480, 960]} sizes="(max-width: 480px) 100vw, 480px" loading="eager" fetchpriority="high" class="hero-bg" />
+    )}
+    <div class="scrim top" />
+    <div class="scrim bottom" />
+    <div class="hero-text">
+      <span class="kicker">{info.nombre}</span>
+      <h1 id="hero-title" class="hero-title">{info.eslogan}</h1>
+      {info.subtitulo && <p class="hero-sub">{info.subtitulo}</p>}
+    </div>
+    <div class="hero-foot">
+      <a href="/visitanos" class="status" data-open-status data-hours={hours}>
+        <span class="ms" aria-hidden="true">schedule</span><span data-open-label>Ver horario</span>
+      </a>
+      <a href="#menu" class="cta">
+        Ver menú<span class="ic" aria-hidden="true"><span class="ms">arrow_forward</span></span>
+      </a>
+    </div>
+  </section>
+
+  <div class="sticky" data-sticky>
+    <Header variant="brand" />
+  </div>
+
+  <div id="menu" class="intro">
+    <h2 class="t-title">¿Qué se te antoja hoy?</h2>
+    <p class="intro-sub">Preparado al momento</p>
+  </div>
+
+  <label class="search">
+    <span class="ms" aria-hidden="true">search</span>
+    <input type="search" placeholder="Busca tu bebida favorita" aria-label="Buscar en el menú" autocomplete="off" data-search-input />
+  </label>
+
+  <div class="chips no-scrollbar" role="group" aria-label="Categorías">
+    <Chip label="Todos" icon="" active data={{ cat: 'todos' }} />
+    {groups.map((g) => <Chip label={g.nombre} icon={g.imagen ?? ''} data={{ cat: g.slug }} />)}
+  </div>
+
+  <MenuSection title="Especialidades de la casa" key="destacados" products={productos.filter((p) => p.destacado)} variant="v" />
+  <MenuSection title="Recomendado para ti" key="recomendados" products={productos.filter((p) => p.recomendado)} variant="h" />
+
+  <section class="catalog" data-section="catalogo" aria-labelledby="t-catalogo">
+    <h2 class="t-section head" id="t-catalogo" data-catalog-title>Todo el menú</h2>
+    {groups.map((g) => (
+      <div class="group" data-cat-group={g.slug}>
+        <h3 class="group-title">{g.nombre}</h3>
+        <div class="list">{g.items.map((p) => <ProductCardH product={p} />)}</div>
+      </div>
+    ))}
+    <p class="empty" data-empty hidden aria-live="polite"></p>
+  </section>
 </Base>
+
+<script>
+  import '../scripts/menu-filter';
+  import '../scripts/open-status';
+  import '../scripts/sticky-header';
+</script>
+
+<style>
+  .hero {
+    position: relative; height: clamp(520px, 72dvh, 680px); overflow: hidden;
+    background: radial-gradient(120% 80% at 70% 30%, #4A3324 0%, var(--cafe) 55%, var(--espresso) 100%);
+    color: #fff; border-radius: 0 0 40px 40px;
+  }
+  .hero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .scrim { position: absolute; left: 0; right: 0; pointer-events: none; }
+  .scrim.top { top: 0; height: 340px; background: linear-gradient(180deg, rgba(23, 17, 13, .72) 0%, rgba(23, 17, 13, 0) 100%); }
+  .scrim.bottom { bottom: 0; height: 380px; background: linear-gradient(0deg, rgba(23, 17, 13, .82) 0%, rgba(23, 17, 13, .5) 55%, rgba(23, 17, 13, 0) 100%); }
+  .hero-text { position: absolute; left: 28px; right: 28px; top: 72px; display: flex; flex-direction: column; gap: 14px; }
+  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--durazno); }
+  .hero-title { margin: 0; font-size: 52px; font-weight: 800; line-height: 54px; letter-spacing: -.03em; text-wrap: balance; max-width: 300px; }
+  .hero-sub { margin: 0; font-size: 16px; font-weight: 600; line-height: 22px; color: var(--crema); }
+  .hero-foot { position: absolute; left: 24px; right: 24px; bottom: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .status {
+    align-self: flex-start; height: 36px; padding: 0 14px 0 10px; border-radius: 999px;
+    background: rgba(250, 247, 242, .14); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--crema);
+  }
+  .status .ms { font-size: 18px; color: var(--durazno); }
+  .status[data-open='true'] .ms { color: #9BD4A6; }
+  .cta {
+    height: 60px; padding: 0 10px 0 28px; border-radius: 999px; background: #fff; color: var(--cafe);
+    font-size: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between; box-shadow: 0 14px 30px rgba(0, 0, 0, .25);
+    transition: transform .15s;
+  }
+  .cta:active { transform: scale(.98); }
+  .ic { width: 42px; height: 42px; border-radius: 50%; background: var(--terracota); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .ic .ms { font-size: 22px; }
+
+  .sticky { position: sticky; top: 0; z-index: 10; background: var(--crema); transition: box-shadow .2s; }
+  .sticky.stuck { box-shadow: 0 6px 18px rgba(43, 29, 20, .06); }
+
+  .intro { padding: 8px 24px 0; display: flex; flex-direction: column; gap: 4px; scroll-margin-top: 56px; }
+  .intro .t-title { margin: 0; }
+  .intro-sub { margin: 0; font-size: 13px; color: var(--gris-calido); }
+
+  .search {
+    margin: 18px 24px 0; height: 52px; border-radius: 999px; background: #fff;
+    box-shadow: 0 6px 18px rgba(43, 29, 20, .06), 0 0 0 1px var(--linea);
+    display: flex; align-items: center; gap: 10px; padding: 0 18px;
+  }
+  .search .ms { font-size: 22px; color: var(--gris-calido); }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 14px; height: 100%; }
+  .search input::placeholder { color: var(--gris-calido); }
+  .search:focus-within { box-shadow: 0 6px 18px rgba(43, 29, 20, .06), 0 0 0 2px var(--terracota-oscuro); }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 18px 24px 4px; }
+
+  .catalog { padding-top: 30px; }
+  .head { margin: 0; padding: 0 24px; }
+  .group-title { margin: 22px 24px 0; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--gris-calido); }
+  .list { display: flex; flex-direction: column; gap: 14px; padding: 30px 24px 0 48px; }
+  .empty { margin: 24px; font-size: 14px; color: var(--gris-calido); text-align: center; }
+</style>

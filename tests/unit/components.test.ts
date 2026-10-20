@@ -2,6 +2,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { beforeAll, describe, expect, it } from 'vitest';
 import BottomBar from '../../src/components/BottomBar.astro';
 import BottomNav from '../../src/components/BottomNav.astro';
+import MenuSection from '../../src/components/MenuSection.astro';
 import MethodCard from '../../src/components/MethodCard.astro';
 import ProductCardH from '../../src/components/ProductCardH.astro';
 import ProductCardV from '../../src/components/ProductCardV.astro';
@@ -82,5 +83,21 @@ describe('components', () => {
       container.renderToString(MethodCard, { props: { method } }),
     ]);
     for (const html of renders) expect(html).not.toMatch(/>\s*add\s*</);
+  });
+
+  it('menu section with no products renders nothing, not even its title', async () => {
+    const html = await container.renderToString(MenuSection, {
+      props: { title: 'Recomendado para ti', key: 'recomendados', products: [], variant: 'h' },
+    });
+    expect(html.trim()).toBe('');
+  });
+
+  it('menu section renders its title and cards', async () => {
+    const html = await container.renderToString(MenuSection, {
+      props: { title: 'Recomendado para ti', key: 'recomendados', products: [product], variant: 'h' },
+    });
+    expect(html).toContain('Recomendado para ti');
+    expect(html).toContain('data-section="recomendados"');
+    expect(html).toContain('href="/p/chemex-del-dia"');
   });
 });

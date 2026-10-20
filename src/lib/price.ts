@@ -1,4 +1,4 @@
-import type { Product } from '../../shared/rules.js';
+import type { Milk, Product } from '../../shared/rules.js';
 
 export type Size = 'S' | 'M' | 'L';
 
@@ -23,4 +23,9 @@ export function sizesOf(p: Product): Size[] {
 export function priceFor(p: Product, size: Size, milkExtra = 0): number {
   const base = size === 'S' ? p.precioS ?? p.precio : size === 'L' ? p.precioL ?? p.precio : p.precio;
   return base + milkExtra;
+}
+
+/** Leche por defecto: la más barata (y la primera si empatan), para que el detalle arranque al precio de la tarjeta. */
+export function defaultMilk<T extends Pick<Milk, 'extra'>>(milks: T[]): T | undefined {
+  return milks.reduce<T | undefined>((best, m) => (best === undefined || m.extra < best.extra ? m : best), undefined);
 }

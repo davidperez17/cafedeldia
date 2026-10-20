@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatQ, priceFor, sizesOf } from '../../src/lib/price';
+import { defaultMilk, formatQ, priceFor, sizesOf } from '../../src/lib/price';
 import type { Product } from '../../shared/rules.js';
 
 const base: Product = {
@@ -24,5 +24,15 @@ describe('price', () => {
     expect(priceFor(caramel, 'L', 4)).toBe(44);
     expect(priceFor(caramel, 'S')).toBe(30);
     expect(priceFor(caramel, 'M', 5)).toBe(39);
+  });
+
+  it('the default milk is the cheapest one, so the detail starts at the card price', () => {
+    const milks = [
+      { slug: 'avena', nombre: 'Avena', extra: 4 },
+      { slug: 'entera', nombre: 'Entera', extra: 0 },
+      { slug: 'deslac', nombre: 'Deslactosada', extra: 0 },
+    ];
+    expect(defaultMilk(milks)?.slug).toBe('entera');
+    expect(defaultMilk([])).toBeUndefined();
   });
 });

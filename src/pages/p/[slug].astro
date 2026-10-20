@@ -9,7 +9,7 @@ import ProductCardV from '../../components/ProductCardV.astro';
 import ProductImage from '../../components/ProductImage.astro';
 import BadgeTag from '../../components/Badge.astro';
 import Base from '../../layouts/Base.astro';
-import { formatQ, HERO_PX, priceFor, SHADOW_PX, SIZE_OZ, sizesOf, type Size } from '../../lib/price';
+import { defaultMilk, formatQ, HERO_PX, priceFor, SHADOW_PX, SIZE_OZ, sizesOf, type Size } from '../../lib/price';
 import { loadMenu } from '../../lib/sheet';
 
 export const getStaticPaths = (async () => {
@@ -25,7 +25,7 @@ const { productos, leches, info } = await loadMenu();
 const sizes = sizesOf(p);
 const size: Size = 'M';
 const milks = p.leche ? leches : [];
-const milk = milks[0];
+const milk = defaultMilk(milks);
 const price = formatQ(priceFor(p, size, milk?.extra ?? 0));
 const summaryParts = [sizes.length ? size : '', milk?.nombre ?? ''].filter(Boolean);
 const summary = summaryParts.length ? summaryParts.join(' · ') : undefined;
@@ -85,9 +85,9 @@ const out = p.badge === 'agotado';
       <div class="milk">
         <span class="t-sub pad" id="lbl-milk">Leche</span>
         <div class="chips no-scrollbar" role="radiogroup" aria-labelledby="lbl-milk">
-          {milks.map((m, i) => (
+          {milks.map((m) => (
             <Chip as="label" label={m.nombre} icon={m.imagen ?? ''} extra={m.extra ? `+${formatQ(m.extra)}` : undefined}>
-              <input slot="input" type="radio" name="milk" value={m.nombre} checked={i === 0} class="sr-only" data-milk-extra={m.extra} />
+              <input slot="input" type="radio" name="milk" value={m.nombre} checked={m === milk} class="sr-only" data-milk-extra={m.extra} />
             </Chip>
           ))}
         </div>

@@ -1,0 +1,46 @@
+---
+import ProductImage from './ProductImage.astro';
+
+interface Props {
+  label: string;
+  /** Archivo en src/assets/iconos/ */
+  icon?: string;
+  active?: boolean;
+  as?: 'button' | 'label';
+  data?: Record<string, string>;
+  extra?: string;
+}
+
+const { label, icon, active = false, as = 'button', data = {}, extra } = Astro.props;
+const dataAttrs = Object.fromEntries(Object.entries(data).map(([k, v]) => [`data-${k}`, v]));
+const Tag = as;
+---
+<Tag
+  class:list={['chip', { active, 'with-icon': icon !== undefined }]}
+  type={as === 'button' ? 'button' : undefined}
+  aria-pressed={as === 'button' ? String(active) : undefined}
+  {...dataAttrs}
+>
+  <slot name="input" />
+  {icon !== undefined && (
+    <span class="ico"><ProductImage folder="iconos" file={icon || undefined} alt="" width={36} /></span>
+  )}
+  <span>{label}</span>
+  {extra && <span class="extra">{extra}</span>}
+</Tag>
+
+<style>
+  .chip {
+    height: 40px; padding: 0 20px; border-radius: 999px; border: 0;
+    background: var(--niebla); color: var(--cafe);
+    font-size: 14px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 8px; flex: none;
+    white-space: nowrap; cursor: pointer; transition: background .15s, color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip.with-icon { height: 44px; padding: 0 16px 0 4px; }
+  .chip.active, .chip:has(input:checked) { background: var(--terracota); color: #fff; font-weight: 600; }
+  .chip:has(input:focus-visible) { outline: 2px solid var(--terracota-oscuro); outline-offset: 2px; }
+  .ico { width: 36px; height: 36px; border-radius: 50%; background: var(--crema); overflow: hidden; flex: none; display: block; }
+  .extra { font-size: 11px; opacity: .8; margin-left: -4px; }
+</style>

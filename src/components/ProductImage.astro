@@ -1,0 +1,43 @@
+---
+import { Image } from 'astro:assets';
+import { resolveImage, type ImageFolder } from '../lib/images';
+
+interface Props {
+  folder: ImageFolder;
+  file?: string;
+  alt: string;
+  /** Ancho de la caja en px; la imagen se genera a 1x y 2x. */
+  width: number;
+  eager?: boolean;
+  fit?: 'contain' | 'cover';
+}
+
+const { folder, file, alt, width, eager = false, fit = 'contain' } = Astro.props;
+const img = resolveImage(folder, file);
+---
+{img ? (
+  <Image
+    src={img}
+    alt={alt}
+    width={width}
+    densities={[1, 2]}
+    loading={eager ? 'eager' : 'lazy'}
+    fetchpriority={eager ? 'high' : undefined}
+    class="pimg"
+    style={`object-fit:${fit}`}
+  />
+) : (
+  <span class="ph" aria-hidden="true" style={`font-size:${Math.max(16, Math.round(width * 0.36))}px`}>
+    <span class="ms">local_cafe</span>
+  </span>
+)}
+
+<style>
+  .pimg { width: 100%; height: 100%; }
+  .ph {
+    width: 100%; height: 100%; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--niebla); color: var(--gris-calido);
+    box-shadow: inset 0 0 0 1px rgba(43, 29, 20, .05);
+  }
+</style>

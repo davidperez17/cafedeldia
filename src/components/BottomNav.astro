@@ -1,0 +1,34 @@
+---
+interface Props { active: 'menu' | 'metodos' | 'visitanos' }
+
+const { active } = Astro.props;
+const items = [
+  { key: 'menu', href: '/', icon: 'local_cafe', label: 'Menú' },
+  { key: 'metodos', href: '/metodos', icon: 'coffee_maker', label: 'Métodos' },
+  { key: 'visitanos', href: '/visitanos', icon: 'storefront', label: 'Visítanos' },
+] as const;
+---
+<nav class="nav" aria-label="Secciones">
+  {items.map((it) => (
+    <a href={it.href} class:list={['item', { active: it.key === active }]} aria-current={it.key === active ? 'page' : undefined} aria-label={it.label}>
+      <span class="ms" aria-hidden="true">{it.icon}</span>
+      {it.key === active && <span class="label">{it.label}</span>}
+    </a>
+  ))}
+</nav>
+
+<style>
+  .nav {
+    position: fixed; z-index: 20; bottom: calc(28px + env(safe-area-inset-bottom));
+    left: max(24px, calc(50% - 240px + 24px)); right: max(24px, calc(50% - 240px + 24px));
+    height: 68px; border-radius: 999px; background: var(--espresso); box-shadow: var(--sombra-nav);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 10px;
+  }
+  .item {
+    height: 48px; min-width: 48px; border-radius: 999px; color: var(--nav-inactivo);
+    display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .2s;
+  }
+  .item .ms { font-size: 22px; }
+  .item.active { background: var(--nav-activo-bg); color: var(--terracota); padding: 0 16px; }
+  .label { font-size: 13px; font-weight: 600; }
+</style>

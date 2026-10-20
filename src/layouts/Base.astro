@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import BottomNav from '../components/BottomNav.astro';
 
 interface Props {
   title: string;
@@ -8,7 +9,7 @@ interface Props {
   ogImage?: string;
 }
 
-const { title, description = 'Menú digital de Café del Día.', ogImage } = Astro.props;
+const { title, description = 'Menú digital de Café del Día.', nav = null, ogImage } = Astro.props;
 
 // Material Symbols: solo los íconos usados, en orden alfabético (requisito de Google Fonts).
 const ICONS = [
@@ -33,10 +34,11 @@ const iconsHref = `https://fonts.googleapis.com/css2?family=Material+Symbols+Rou
     <slot name="head" />
   </head>
   <body>
-    <main class="col">
+    <main class:list={['col', { 'has-nav': nav }]}>
       <slot />
     </main>
     <slot name="bottom" />
+    {nav && <BottomNav active={nav} />}
   </body>
 </html>
 
@@ -47,4 +49,5 @@ const iconsHref = `https://fonts.googleapis.com/css2?family=Material+Symbols+Rou
     min-height: 100dvh;
     position: relative;
   }
+  .has-nav { padding-bottom: calc(124px + env(safe-area-inset-bottom)); }
 </style>
